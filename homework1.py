@@ -18,18 +18,8 @@
 
 import itertools
 def best_hand(hand):
-    "From a 7-card hand, return the best 5 card hand."
-    
-    # get all 5-card combinations
-    all5CardCombis = [hand for hand in itertools.combinations(hand, 5)]
-
-    # rank them
-    ranks = [hand_rank(hand) for hand in all5CardCombis]
-
-    # return the max
-    return all5CardCombis[ranks.index(max(ranks))]
-
-
+    "From a 7-card hand, return the best 5 card hand."    
+    return max(itertools.combinations(hand, 5), key=hand_rank)
   
 # ------------------
 # Provided Functions

@@ -25,32 +25,70 @@
 # hands: 4 kings along with any of the three queens).
 
 import itertools
+import ipdb
+
+
+# start of professor norvig's code
+
+allranks = '23456789TJQKA'
+redcards = [r+s for r in allranks for s in 'DH']
+blackcards = [r+s for r in allranks for s in 'SC']
 
 def best_wild_hand(hand):
     "Try all values for jokers in all 5-card selections."
+    hands = set(best_hand(h)
+                for h in itertools.product(*map(replacements, hand)))
+    return max(hands, key=hand_rank)
     
+def replacements(card):
+    """Return a list of the possible replacements for a card.
+    There will be more than 1 only for wild cards."""
+    if card == '?B': return blackcards
+    elif card == '?R': return redcards
+    else: return [card]
     
+def best_hand(hand):
+    "From a 7-card hand, return the best 5 card hand."    
+    return max(itertools.combinations(hand, 5), key=hand_rank)
+
+# end of professor norvig's code
+
+
+def best_wild_hand_ben(hand):
+    "Ben OLD version... compare with Professor Norvig's"
+
+    jokerCards = {
+        '?R' : [''.join(i) for i in itertools.product('23456789TJQKA', 'HD')],
+        '?B' : [''.join(i) for i in itertools.product('23456789TJQKA', 'SC')]
+    } 
     
-
-jokers = {
-    '?R' : [''.join(i) for i in itertools.product('23456789TJQKA', 'HD')],
-    '?B' : [''.join(i) for i in itertools.product('23456789TJQKA', 'SC')]
-}    
-
-
-
     # get all 5-card combinations (incl jokers)
-    all5CardCombis = [hand for hand in itertools.combinations(hand, 5)]
+    origHands = [x for x in itertools.combinations(hand, 5)]
+   
+    # substitute jokers
+    sHands = []
+    for h in origHands:
+        justJokers = [x for x in h if x.find('?')!=-1]
+        exclJokers = [x for x in h if x.find('?')==-1]
+        if len(justJokers) == 0:
+            sHands.append(h)
+        
+        # get all possible joker substitutions
+        jokerSubs = itertools.product(*[jokerCards[j] for j in justJokers])
+        
+        # for each jokers sub, construct new hand
+        for js in jokerSubs:
+            nh = list(exclJokers)
+            nh.extend(list(js))
+            sHands.append(nh)
 
-    # rank them
-    ranks = [hand_rank(hand) for hand in all5CardCombis]
+    # rank hands
+    ranks = [hand_rank(h) for h in sHands]
 
     # return the max
-    return all5CardCombis[ranks.index(max(ranks))]
+    return sHands[ranks.index(max(ranks))]
     
-
-
-
+    
 def test_best_wild_hand():
     assert (sorted(best_wild_hand("6C 7C 8C 9C TC 5C ?B".split()))
             == ['7C', '8C', '9C', 'JC', 'TC'])
@@ -122,3 +160,6 @@ def two_pair(ranks):
         return (pair, lowpair)
     else:
         return None 
+
+
+print test_best_wild_hand()
