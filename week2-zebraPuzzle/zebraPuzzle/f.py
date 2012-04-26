@@ -94,6 +94,7 @@ def average(numbers):
 	"Return the average (arithmetic mean) of a sequence of numbers"
 	return sum(numbers) / float(len(numbers))
 
-print timedcalls(2.0, zebra_puzzle)
+print zebra_puzzle()
+# print timedcalls(2.0, zebra_puzzle)
 
 
