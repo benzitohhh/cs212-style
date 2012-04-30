@@ -20,5 +20,17 @@
 import itertools
 
 def floor_puzzle():
-    # Your code here
-    return [Hopper, Kay, Liskov, Perlis, Ritchie]
+    floors = [bottom, _, _, _, top] = [1,2,3,4,5]
+    orderings = list(itertools.permutations(floors))
+    return next([Hopper, Kay, Liskov, Perlis, Ritchie]
+        for (Hopper, Kay, Liskov, Perlis, Ritchie) in orderings
+        if Hopper is not top
+        if Kay is not bottom
+        if Liskov is not top
+        if Liskov is not bottom
+        if Perlis > Kay
+        if not abs(Ritchie-Liskov) == 1
+        if not abs(Kay-Liskov) == 1
+        )
+
+print floor_puzzle()

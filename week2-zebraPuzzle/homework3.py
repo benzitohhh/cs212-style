@@ -15,10 +15,26 @@
 #
 # Please do not use regular expressions to solve this quiz!
 
+import itertools
 def longest_subpalindrome_slice(text):
     "Return (i, j) such that text[i:j] is the longest palindrome in text."
-    # Your code here
-    
+    if text == "": return (0,0)
+    text = text.lower()
+    idxs = sorted(
+        itertools.combinations(range(len(text)), 2),
+        key=lambda (x,y): abs(x-y),
+        reverse=True)
+    for (i,j) in idxs:
+        if isPalindrome(text, i, j):
+            return (i,j+1)
+    return (0, 0)
+
+def isPalindrome(text, i, j):
+    if i == j or abs(i-j) == 1:
+        return text[i] == text[j]
+    else:
+        return text[i] == text[j] and isPalindrome(text, i+1, j-1)
+
 def test():
     L = longest_subpalindrome_slice
     assert L('racecar') == (0, 7)
@@ -32,3 +48,5 @@ def test():
     return 'tests pass'
 
 print test()
+# print longest_subpalindrome_slice("racecar")
+# print isPalindrome("racecar")
