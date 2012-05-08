@@ -39,6 +39,24 @@ def inverse(f, delta = 1/128.):
     """Given a function y = f(x) that is a monotonically increasing function on
     non-negatve numbers, return the function x = f_1(y) that is an approximate
     inverse, picking the closest value to the inverse, within delta."""
+
+    def f_1(y, x0=0):
+        fx0 = f(x0)
+
+        # base case
+        if abs(fx0 - y) < delta:
+            return x0
+
+        # approximate derrivative
+        d = (f(x0 + delta) - fx0) / delta
+
+        # calculate X1
+        x1 = x0 - ((fx0 - y) / d)
+
+        # recurse
+        return f_1(y, x1)
+
+    return f_1
     
 def square(x): return x*x
 sqrt = slow_inverse(square)
@@ -56,5 +74,6 @@ def binarySearch(arr, key, imin, imax):
         return mid
 
 
-
+g = inverse(square)
+print g(400)
 # print sqrt(1000000000)
