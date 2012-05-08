@@ -46,12 +46,35 @@ def bsuccessors(state):
     '<-' for there to here."""
     here, there, t = state
     if 'light' in here:
-    	return dict(((here - frozenset([a,b, 'light']),
-    				  there | frozenset([a,b, 'light']),
-    				  t + max(a, b)),
-    				(a,b, '->'))
-    			   for a in here if a is not 'light'
-    			   for b in here if b is not 'light')
+    	return dict(
+    				# (inner arg is one big generator....)
+
+	    				# state
+	    				((here - frozenset([a,b, 'light']),
+	    				  there | frozenset([a,b, 'light']),
+	    				  t + max(a, b)),
+	    				# action
+	    				(a,b, '->'))
+	    			   for a in here if a is not 'light'
+	    			   for b in here if b is not 'light'
+
+	    			# (end of generator)
+
+
+	    			# NOTE:
+	    			#      1. a can equal b
+	    			# 			But...... the frozen set will take care of this
+	    			# 					i.e. frozenset[a,a,'light'] === frozenset[a,'light']
+	    			#
+	    			#      2. (a, b) can equal (b, a)   i.e. repetitions
+	    			#           But...... dictionary takes care of this
+	    			#
+	    			#      3. action - representation uncertain
+	    			#           i.e. spec said '->'
+	    			#                but we are returning (a,b,'->'')
+	    			#           But... this uncertainty is "contained", hence ok.
+
+    			   )
     else:
     	return dict(((here | frozenset([a,b, 'light']),
     				  there - frozenset([a,b, 'light']),
