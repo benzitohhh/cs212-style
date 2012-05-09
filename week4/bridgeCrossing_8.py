@@ -60,12 +60,12 @@ def bridge_problem(here):
     frontier = [ [(here, frozenset(), 0)] ] # ordered list of paths we have blazed
     while frontier:
         path = frontier.pop(0)
-        here1, there1, t1 = state1 = path[-1]
+        here1, there1 = state1 = path[-1]
         if not here1 or here1 == set(['light']):  ## Check for solution when we pull best path off frontier
             return path
         for (state, action) in bsuccessors(state1).items():
             if state not in explored:
-                here, there, t = state
+                here, there = state
                 explored.add(state)
                 path2 = path + [action, state]
                 # Don't check for solution when we extend a path
