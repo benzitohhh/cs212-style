@@ -51,21 +51,11 @@ print best_action(1000001, actions, Q, math.log10)
 
 print math.log10(1000000)
 
+# This formulation does NOT treat people's perception of money as linear,
+# but logarithmic (base10)
+
+# The result is there is a "crossover" point at the state of $1m.
+# Here, the optimal action could be either "hold" or "gamble".
 
 
-
-
-# But... in this formulation,
-# the optimal statregy is ALWAYS to gamble.
-
-# Effectively, it assumes that $3m is 3 times better than $1m
-
-# But of course, for most people, that is not true.
-# Going from $0 to $1m is a big big jump. $1m to 3m is much smaller.
-# (even though arithmetically this is not the case)
-
-# This does not mean that people are irrational.
-
-# Instead it shows that to people, the value of money
-# is not a linear function.
 
