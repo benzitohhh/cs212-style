@@ -8,7 +8,7 @@
 # Enter your code at line 101.
 
 from functools import update_wrapper
-
+# import ipdb
 def decorator(d):
     "Make function d a decorator: d wraps a function fn."
     def _d(fn):
@@ -30,6 +30,8 @@ def memo(f):
         except TypeError:
             # some element of args can't be a dict key
             return f(args)
+    # Ben - hack to expose cache....
+    _f.cache = cache
     return _f
 
 other = {1:0, 0:1}
@@ -150,4 +152,8 @@ def test():
     assert(max_diffs((0, 0, 39, 37)))  == "hold"
     return 'tests pass'
 
-print test()
+# print test()
+goal = 3
+print Pwin((0,0,0,0))
+print len(Pwin.cache)
+# ipdb.set_trace()

@@ -30,11 +30,109 @@ def pig_actions_d(state):
     # which is 1 or 2 to denote the value of the game, or 'double'
     # for the moment at which one player has doubled and is waiting
     # for the other to accept or decline
-    (p, me, you, pending, double) = state 
-    # your code here
+    (p, me, you, pending, double) = state
+    if double == 'double':
+        return ['accept', 'decline']
+    elif double == 1:
+        return ['roll', 'hold', 'double'] if pending else ['roll', 'double']
+    else:
+        # double is greater than 1
+        return ['roll', 'hold'] if pending else ['roll']
+            
+from functools import update_wrapper
 
+def decorator(d):
+    "Make function d a decorator: d wraps a function fn."
+    def _d(fn):
+        return update_wrapper(d(fn), fn)
+    update_wrapper(_d, d)
+    return _d
+
+@decorator
+def memo(f):
+    """Decorator that caches the return value for each call to f(args).
+    Then when called again with same args, we can just look it up."""
+    cache = {}
+    def _f(*args):
+        try:
+            return cache[args]
+        except KeyError:
+            cache[args] = result = f(*args)
+            return result
+        except TypeError:
+            # some element of args can't be a dict key
+            return f(args)
+    # Ben - hack to expose cache....
+    _f.cache = cache
+    return _f    
+
+
+##############################
+# Utility fuctions
+##############################
+
+@memo        
+def Pwin(state):
+    """The utility of a state; here just the probability that an optimal player
+    whose turn it is to move can win from the current state."""
+    # Assumes opponent also plays with optimal strategy.
+    (p, me, you, pending, double) = state
+    if me + pending >= goal:
+        return 2 if double == 2 else 1
+    elif you >= goal:
+        return -2 if double == -2 else -1
+    else:
+        return max(Q_pig(state, action, Pwin)
+                   for action in pig_actions_d(state))
+
+
+###############################################
+# Quality function - this elegantly implements "minimax" 
+###############################################
+def Q_pig(state, action, Pwin):  
+   "The expected value of choosing action in state."
+   # no more direct action functions... instead call do(action, state, dierolls)
+   if action == 'hold':
+       # i.e. 1 - opponents chances of winning
+       return 1 - Pwin(do(action, state, None))
+   if action == 'roll':
+       # i.e. if 1 it's a pigout, so return 1 - opponents chances of winning
+       # i.e. otherwise just the average of all 6 die results
+       # return (1 - Pwin(roll(state, 1))
+       #         + sum(Pwin(roll(state, d)) for d in (2,3,4,5,6))) / 6.
+       return (1 - Pwin(do(action, state, die_preset_roll(1)))
+               + sum(Pwin(  do(action, state, die_preset_roll(d))  ) for d in (2,3,4,5,6))) / 6.
+   if action == 'double':
+       return 1 - Pwin(do(action, state, None))
+   if action == 'accept':
+       return 1 - Pwin(do(action, state, None))
+   if action == 'decline':
+       return 1 - Pwin(do(action, state, None))
+   raise ValueError
+
+def die_preset_roll(n):
+    """return a generator that just yields n"""
+    yield n
+
+
+###############################################
+# Best action function
+###############################################
+def best_action(state, actions, Q, U):
+  "Return the optimal action for a state, given U."
+  def EU(action): return Q(state, action, U)
+  return max(actions(state), key=EU)
+
+
+
+###############################################
+# Strategy (this just calls best_action on a particular utility)
+###############################################
 def strategy_d(state):
-    # your code here
+    "The optimal pig strategy chooses an action with the highest win probability."
+    return best_action(state, pig_actions_d, Q_pig, Pwin)
+        
+    
 
 
 ## You can use the code below, but don't need to modify it.
