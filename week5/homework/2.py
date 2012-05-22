@@ -19,26 +19,6 @@
 
 import random
 
-def pig_actions_d(state):
-    """The legal actions from a state. Usually, ["roll", "hold"].
-    Exceptions: If double is "double", can only "accept" or "decline".
-    Can't "hold" if pending is 0.
-    If double is 1, can "double" (in addition to other moves).
-    (If double > 1, cannot "double").
-    """
-    # state is like before, but with one more component, double,
-    # which is 1 or 2 to denote the value of the game, or 'double'
-    # for the moment at which one player has doubled and is waiting
-    # for the other to accept or decline
-    (p, me, you, pending, double) = state
-    if double == 'double':
-        return ['accept', 'decline']
-    elif double == 1:
-        return ['roll', 'hold', 'double'] if pending else ['roll', 'double']
-    else:
-        # double is greater than 1
-        return ['roll', 'hold'] if pending else ['roll']
-            
 from functools import update_wrapper
 
 def decorator(d):
@@ -68,19 +48,42 @@ def memo(f):
 
 
 ##############################
-# Utility fuctions
+# Get actions function
 ##############################
+def pig_actions_d(state):
+    """The legal actions from a state. Usually, ["roll", "hold"].
+    Exceptions: If double is "double", can only "accept" or "decline".
+    Can't "hold" if pending is 0.
+    If double is 1, can "double" (in addition to other moves).
+    (If double > 1, cannot "double").
+    """
+    # state is like before, but with one more component, double,
+    # which is 1 or 2 to denote the value of the game, or 'double'
+    # for the moment at which one player has doubled and is waiting
+    # for the other to accept or decline
+    (p, me, you, pending, double) = state
+    if double == 'double':
+        return ['accept', 'decline']
+    elif double == 1:
+        return ['roll', 'hold', 'double'] if pending else ['roll', 'double']
+    else:
+        # double is greater than 1
+        return ['roll', 'hold'] if pending else ['roll']
 
+##############################
+# Utility fuction
+##############################
 @memo        
 def Pwin(state):
     """The utility of a state; here just the probability that an optimal player
     whose turn it is to move can win from the current state."""
     # Assumes opponent also plays with optimal strategy.
     (p, me, you, pending, double) = state
+
     if me + pending >= goal:
         return 2 if double == 2 else 1
     elif you >= goal:
-        return -2 if double == -2 else -1
+        return -2 if double == 2 else -1
     else:
         return max(Q_pig(state, action, Pwin)
                    for action in pig_actions_d(state))
@@ -123,18 +126,23 @@ def best_action(state, actions, Q, U):
   def EU(action): return Q(state, action, U)
   return max(actions(state), key=EU)
 
-
-
 ###############################################
-# Strategy (this just calls best_action on a particular utility)
+# "Best strateggy" - this just calls best_action on a particular utility
+# Arghghghghg! Why doesn't this work?!???!
 ###############################################
-def strategy_d(state):
+def strategy_e(state):
     "The optimal pig strategy chooses an action with the highest win probability."
     return best_action(state, pig_actions_d, Q_pig, Pwin)
         
+###############################################
+# Winning strategy - only double if within 1 of the goal...
+###############################################
+def strategy_d(state):
+    (p, me, you, pending, double) = state
+    return ('double' if double == 1 and me + pending >= (goal - 1) else
+            'hold' if (pending >= 20 or me + pending >= goal) else
+            'roll')
     
-
-
 ## You can use the code below, but don't need to modify it.
 
 def hold_20_d(state):
@@ -222,5 +230,5 @@ def test():
 
 print test()
 
-
+# strategy_compare(strategy_d, hold_20_d)
 
