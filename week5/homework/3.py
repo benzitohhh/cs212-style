@@ -24,7 +24,7 @@
 # 1.5 more points than the take5 strategy.
 
 import random
-
+import pdb
 def foxes_and_hens(strategy, foxes=7, hens=45):
     """Play the game of foxes and hens."""
     # A state is a tuple of (score-so-far, number-of-hens-in-yard, deck-of-cards)
@@ -36,9 +36,20 @@ def foxes_and_hens(strategy, foxes=7, hens=45):
 
 def do(action, state):
     "Apply action to state, returning a new state."
-    # Make sure you always use up one card.
-    #
-    # your code here
+    (score, yard, cards) = state
+    idx = random.randint(0, len(cards)-1)
+    card = cards[idx]
+    cards = cards[:idx] + cards[idx+1:]
+    if action == 'wait':
+        if card == 'F':
+            return (score, 0, cards)
+        else:
+            # card == 'H'
+            return (score, yard+1, cards)
+    else:
+        # action == 'gather'
+        return (score+yard, 0, cards)
+
     
 def take5(state):
     "A strategy that waits until there are 5 hens in yard, then gathers."
@@ -55,9 +66,69 @@ def superior(A, B=take5):
     "Does strategy A have a higher average score than B, by more than 1.5 point?"
     return average_score(A) - average_score(B) > 1.5
 
-def strategy(state):
+actions = ['gather', 'wait']
+
+from functools import update_wrapper
+
+def decorator(d):
+    "Make function d a decorator: d wraps a function fn."
+    def _d(fn):
+        return update_wrapper(d(fn), fn)
+    update_wrapper(_d, d)
+    return _d
+
+@decorator
+def memo(f):
+    """Decorator that caches the return value for each call to f(args).
+    Then when called again with same args, we can just look it up."""
+    cache = {}
+    def _f(*args):
+        try:
+            return cache[args]
+        except KeyError:
+            cache[args] = result = f(*args)
+            return result
+        except TypeError:
+            # some element of args refuses to be a dict key
+            return f(args)
+    _f.cache = cache
+    return _f
+
+@memo
+def f_utility(state):
     (score, yard, cards) = state
-    # your code here
+    if not cards:
+        return score + yard
+    else:
+        return max(f_quality(action, state, f_utility)
+                   for action in actions)
+
+def f_quality(action, state, U):
+    if action == 'gather':
+        return U(do(action, state))
+    if action == 'wait':
+        (score, yard, cards) = state
+        d = 1. / len(cards)
+        # pdb.set_trace()
+        pF = d * cards.count('F')
+        pH = d * cards.count('H')
+        state_dFox = (score, 0, cards.replace('F', '', 1))
+        state_dHen = (score, yard+1, cards.replace('H', '', 1))
+        total = 0.
+        if pF > 0.0:
+            total += pF * U(state_dFox)
+        if pH > 0.0:
+            total += pH * U(state_dHen)
+        return total
+    raise ValueError
+
+def best_action(state, actions, Q, U):
+    "Return the optimal action for a state, given U."
+    def EU(action): return Q(action, state, U)
+    return max(actions, key=EU)
+
+def strategy(state):
+    return best_action(state, actions, f_quality, f_utility)
 
 def test():
     gather = do('gather', (4, 5, 'F'*4 + 'H'*10))
@@ -71,6 +142,13 @@ def test():
     assert superior(strategy)
     return 'tests pass'
 
-print test()   
+# print test()
+
+print average_score(strategy)
+print average_score(take5) 
+
+# print foxes_and_hens(strategy)
+# state = (score, yard, cards)
+# print f_utility((3, 4, 'HFFFFHF'))
 
 
