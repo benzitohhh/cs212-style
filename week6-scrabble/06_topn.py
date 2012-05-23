@@ -85,9 +85,7 @@ def word_score(word):
 
 def topn(hand, board_letters, n=10):
     "Return a list of the top n words that hand can play, sorted by word score."
-    print sorted(word_plays(hand, board_letters), key=word_score, reverse=True)
-    sorted(word_plays(hand, board_letters), key=word_score, reverse=True)[:10]
-
+    return sorted(word_plays(hand, board_letters), key=word_score, reverse=True)[:n]
 
 def timedcall(fn, *args):
     "Call function with args; return the time in seconds and result."
@@ -160,4 +158,4 @@ def test_words():
             hand, got, expected, expected ^ got)
     return t
 
-print topn("ACTIO", "N", n=10)
+# print topn("ACTIO", "N", n=10)
