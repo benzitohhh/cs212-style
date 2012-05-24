@@ -13,3 +13,6 @@ a_row = row = ['|', 'A', mnx, moab, '.', '.', ANY, 'B', 'E', ANY, 'C', ANY, '.',
 
 # A hand
 a_hand = 'ABCEHKN'
+
+# The row (that we're trying to model)
+#  |A....BE.C...D.|
