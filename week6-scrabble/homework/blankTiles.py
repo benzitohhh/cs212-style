@@ -4,7 +4,7 @@
 # Modify our scrabble program to accept blank tiles and score 
 # them appropriately. You can do this in whatever manner you 
 # wish as long as you match the given test cases.
-
+import ipdb
 POINTS = dict(A=1, B=3, C=3, D=2, E=1, F=4, G=2, H=4, I=1, J=8, K=5, L=1, M=3, N=1, O=1, P=3, Q=10, R=1, S=1, T=1, U=1, V=4, W=4, X=8, Y=4, Z=10, _=0)
 
 def bonus_template(quadrant):
@@ -68,10 +68,11 @@ class anchor(set):
     "An anchor is where a new word can be placed; has a set of allowable letters."
 
 LETTERS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+BLANK = "_"
 ANY = anchor(LETTERS) # The anchor that can be any letter
 
 def is_letter(sq):
-    return isinstance(sq, str) and sq in LETTERS
+    return isinstance(sq, str) and sq.upper() in LETTERS
 
 def is_empty(sq):
     "Is this an empty square (no letters, but a valid position on board)."
@@ -80,9 +81,9 @@ def is_empty(sq):
 def add_suffixes(hand, pre, start, row, results, anchored=True):
     "Add all possible suffixes, and accumulate (start, word) pairs in results."
     i = start + len(pre)
-    if pre in WORDS and anchored and not is_letter(row[i]):
+    if pre.upper() in WORDS and anchored and not is_letter(row[i]):
         results.add((start, pre))
-    if pre in PREFIXES:       
+    if pre.upper() in PREFIXES:       
         sq = row[i]
         if is_letter(sq):
             add_suffixes(hand, pre+sq, start, row, results)        
@@ -91,6 +92,9 @@ def add_suffixes(hand, pre, start, row, results, anchored=True):
             for L in hand:
                 if L in possibilities:
                     add_suffixes(hand.replace(L, '', 1), pre+L, start, row, results)
+                elif L == BLANK:
+                    for K in possibilities:
+                        add_suffixes(hand.replace(L, '', 1), pre+K.lower(), start, row, results)
     return results
 
 def legal_prefix(i, row):
@@ -114,10 +118,15 @@ def find_prefixes(hand, pre='', results=None):
     if results is None: results = set()
     if pre == '': prev_hand, prev_results = hand, results
     # Now do the computation
-    if pre in WORDS or pre in PREFIXES: results.add(pre)
-    if pre in PREFIXES:
+    if pre.upper() in WORDS or pre.upper() in PREFIXES: results.add(pre)
+    if pre.upper() in PREFIXES:
         for L in hand:
-            find_prefixes(hand.replace(L, '', 1), pre+L, results)
+            # L may be "_"
+            if L == BLANK:
+                for K in LETTERS:
+                    find_prefixes(hand.replace(L, '', 1), pre + K.lower(), results)
+            else:        
+                find_prefixes(hand.replace(L, '', 1), pre + L, results)
     return results
 
 def row_plays(hand, row):
@@ -125,8 +134,10 @@ def row_plays(hand, row):
     results = set()
     ## To each allowable prefix, add all suffixes, keeping words
     for (i, sq) in enumerate(row[1:-1], 1):
+        # only interested in anchors (i.e. sets)
         if isinstance(sq, set):
             pre, maxsize = legal_prefix(i, row)
+            # pre may contain lowercase letters
             if pre: ## Add to the letters already on the board
                 start = i - len(pre)
                 add_suffixes(hand, pre, start, row, results, anchored=False)
@@ -169,7 +180,7 @@ def set_anchors(row, j, board):
             if is_letter(N) or is_letter(S):   
                 # Find letters that fit with the cross (vertical) word
                 (j2, w) = find_cross_word(board, i, j)
-                row[i] = anchor(L for L in LETTERS if w.replace('.', L) in WORDS)
+                row[i] = anchor(L for L in LETTERS if w.replace('.', L).upper() in WORDS)
             else: # Unrestricted empty square -- any letter will fit.
                 row[i] = ANY
 
@@ -187,7 +198,9 @@ def calculate_score(board, pos, direction, hand, word):
                       3 if b == TW else 2 if b in (DW,'*') else 1)
         letter_mult = (1 if is_letter(sq) else
                        3 if b == TL else 2 if b == DL else 1)
-        total += POINTS[L] * letter_mult
+        if not L.islower():
+            # only add letter points for non-blanks
+            total += POINTS[L] * letter_mult
         if isinstance(sq, set) and sq is not ANY and direction is not DOWN:
             crosstotal += cross_word_score(board, L, (i, j), other_direction)
     return crosstotal + word_mult * total
@@ -240,6 +253,13 @@ def a_board():
                       '|GUY....F.H...L.|',
                       '|||||||||||||||||'])
 
+def show(board):
+    "Print the board."
+    for j, row in enumerate(board):
+        for i, sq in enumerate(row):
+            print (sq if (is_letter(sq) or sq == '|') else BONUS[j][i]),
+        print
+
 def test():
     def ok(hand, n, s, d, w):
         # n = score
@@ -254,6 +274,4 @@ def test():
     assert ok('_BCEHKN', 62, (3, 2), (1, 0), 'BaCKBENCH')
     assert ok('__CEHKN', 61, (9, 1), (1, 0), 'KiCk')
 
-#print test()
-
-
+print test()
