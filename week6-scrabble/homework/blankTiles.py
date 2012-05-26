@@ -71,7 +71,7 @@ LETTERS = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 ANY = anchor(LETTERS) # The anchor that can be any letter
 
 def is_letter(sq):
-    return isinstance(sq, str) and sq.upper() in LETTERS
+    return isinstance(sq, str) and sq in LETTERS
 
 def is_empty(sq):
     "Is this an empty square (no letters, but a valid position on board)."
